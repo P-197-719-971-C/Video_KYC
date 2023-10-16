@@ -1,0 +1,10 @@
+opencv-python
+numpy
+pandas
+matplotlib
+seaborn
+streamlit
+streamlit-webrtc
+watchdog
+mediapipe
+-e .
