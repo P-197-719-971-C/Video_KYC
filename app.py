@@ -32,7 +32,7 @@ def upload():
         video_bytes = uploaded_files.read()
         # Save the video as upload.avi
         with st.spinner("Uploading..."):
-            with open("upload.avi", "wb") as f:
+            with open("capture.avi", "wb") as f:
                 f.write(video_bytes)
         st.success("Video uploaded successfully!")
 
