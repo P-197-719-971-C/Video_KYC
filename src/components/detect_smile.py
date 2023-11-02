@@ -3,12 +3,12 @@ import time
 import math
 import numpy as np
 import mediapipe as mp
-from src.components.utility import euclidean_distance, point, LivePlot, GREEN, MAGENTA
+from src.utils.utility import euclidean_distance, point, LivePlot, GREEN, MAGENTA
 from src.logger.logger import logging
 from scipy.signal import argrelextrema
 import scipy.signal
 from src.components.detect_eyeblink import detect_eye_blink
-
+from src.components.detect_gesture import detect_victory_thumbsUp
 def smile_ratio(face, img):
     noseDown = face[2]
     lipupUp = face[0]
@@ -99,10 +99,10 @@ def detect_smile(cap, smoothing_frames:int = 3, order:int = 20):
     local_minima_indices = argrelextrema(np.array(ratioAvgList), np.less, order= order)[0]
     local_minima_values = [ratioAvgList[i] for i in local_minima_indices]
     print(local_minima_values)
-    average = sum(local_minima_values)/len(local_minima_values)
+    average = sum(local_minima_values)/(len(local_minima_values)+0.0001)
     print(len(local_minima_values))
     print(average)
-    video_duration_minutes = cap.get(cv.CAP_PROP_FRAME_COUNT) / cap.get(cv.CAP_PROP_FPS) / 60
+    video_duration_minutes = cap.get(cv.CAP_PROP_FRAME_COUNT) / (cap.get(cv.CAP_PROP_FPS) + 0.0001) / 60
     print(f"video duration: {video_duration_minutes}")
     total_frames = cap.get(cv.CAP_PROP_FRAME_COUNT)
     cap.release()
@@ -120,6 +120,10 @@ def detect_smile(cap, smoothing_frames:int = 3, order:int = 20):
 if __name__ == "__main__":
     cap = cv.VideoCapture("capture.avi")
     # Measure the start time
-    detect_eye_blink(cap)
-    detect_smile(cap)
+    eye_blink_average = detect_eye_blink(cap)
+    smile_average = detect_smile(cap)
+    hand_sign_id = detect_victory_thumbsUp(cap)
+    print(eye_blink_average)
+    print(smile_average)
+    print(hand_sign_id)
     

@@ -3,6 +3,8 @@ import numpy as np
 import math
 import time
 from src.logger.logger import logging
+from collections import deque
+
 # colors 
 # values =(blue, green, red) opencv accepts BGR values not RGB
 BLACK = (0,0,0)
@@ -113,3 +115,21 @@ class LivePlot:
             cv.putText(self.imgPlot, str(y_label), (10, y), cv.FONT_HERSHEY_PLAIN, 1, (150, 150, 150), 1)
 
         cv.putText(self.imgPlot, self.char, (self.w - 100, self.h - 25), cv.FONT_HERSHEY_PLAIN, 5, (150, 150, 150), 5)
+
+class CvFpsCalc(object):
+    def __init__(self, buffer_len=1):
+        self._start_tick = cv.getTickCount()
+        self._freq = 1000.0 / cv.getTickFrequency()
+        self._difftimes = deque(maxlen=buffer_len)
+
+    def get(self):
+        current_tick = cv.getTickCount()
+        different_time = (current_tick - self._start_tick) * self._freq
+        self._start_tick = current_tick
+
+        self._difftimes.append(different_time)
+
+        fps = 1000.0 / (sum(self._difftimes) / len(self._difftimes))
+        fps_rounded = round(fps, 2)
+
+        return fps_rounded

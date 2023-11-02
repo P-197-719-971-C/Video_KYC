@@ -3,7 +3,7 @@ import time
 import math
 import numpy as np
 import mediapipe as mp
-from src.components.utility import euclidean_distance, point, LivePlot, GREEN, MAGENTA
+from src.utils.utility import euclidean_distance, point, LivePlot, GREEN, MAGENTA
 from src.logger.logger import logging
 from scipy.signal import argrelextrema
 import scipy.signal

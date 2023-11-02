@@ -1,11 +1,13 @@
 opencv-contrib-python
 numpy
-# pandas
 matplotlib
-# seaborn
 streamlit
 streamlit-webrtc
 # watchdog
 mediapipe
 scipy
+tensorflow
+scikit-learn
+pandas
+seaborn
 -e .
