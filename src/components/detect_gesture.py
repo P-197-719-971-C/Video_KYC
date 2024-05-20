@@ -364,31 +364,14 @@ def draw_info(image, fps, mode, number):
     return image
 
 def detect_victory_thumbsUp(cap):
-    # Argument parsing #################################################################
-    args = get_args()
-
-    # cap_device = args.device
-    cap_width = args.width
-    cap_height = args.height
-
-    use_static_image_mode = args.use_static_image_mode
-    min_detection_confidence = args.min_detection_confidence
-    min_tracking_confidence = args.min_tracking_confidence
-
     use_brect = True
-
-    # Camera preparation ###############################################################
-    # cap = cv.VideoCapture(cap_device)
-    cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
-    cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
-
     # Model load #############################################################
     mp_hands = mp.solutions.hands
     hands = mp_hands.Hands(
-        static_image_mode=use_static_image_mode,
-        max_num_hands=1,
-        min_detection_confidence=min_detection_confidence,
-        min_tracking_confidence=min_tracking_confidence,
+        static_image_mode=False,
+        max_num_hands=2,
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5,
     )
 
     keypoint_classifier = KeyPointClassifier()
@@ -405,6 +388,9 @@ def detect_victory_thumbsUp(cap):
     # FPS Measurement ########################################################
     cvFpsCalc = CvFpsCalc(buffer_len=10)
 
+    # Initialize variables to track maximum probability and index
+    max_hand_sign_prob = 0.0
+    max_hand_sign_index = 0
     #  ########################################################################
     mode = 0
 
@@ -431,12 +417,13 @@ def detect_victory_thumbsUp(cap):
 
         image.flags.writeable = False
         results = hands.process(image)
+    
         image.flags.writeable = True
-
         #  ####################################################################
         if results.multi_hand_landmarks is not None:
-            for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
-                                                  results.multi_handedness):
+            
+            for frame_index, (hand_landmarks, handedness) in enumerate(zip(results.multi_hand_landmarks,
+                                                  results.multi_handedness)):
                 # Bounding box calculation
                 brect = calc_bounding_rect(debug_image, hand_landmarks)
                 # Landmark calculation
@@ -449,8 +436,13 @@ def detect_victory_thumbsUp(cap):
                 logging_csv(number, mode, pre_processed_landmark_list)
 
                 # Hand sign classification
-                hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
-
+                hand_sign_id, hand_sign_prob = keypoint_classifier(pre_processed_landmark_list)
+                
+                if hand_sign_prob > max_hand_sign_prob:
+                    max_hand_sign_prob = hand_sign_prob
+                    max_hand_sign_index = hand_sign_id
+                    max_prob_frame_index = frame_index
+                    
                 # Drawing part
                 debug_image = draw_bounding_rect(use_brect, debug_image, brect)
                 debug_image = draw_landmarks(debug_image, landmark_list)
@@ -462,8 +454,17 @@ def detect_victory_thumbsUp(cap):
         debug_image = draw_info(debug_image, fps, mode, number)
 
         # Screen reflection #############################################################
-        cv.imshow('Hand Gesture Recognition', debug_image)
+        # cv.imshow('Hand Gesture Recognition', debug_image)
 
     cap.release()
     cv.destroyAllWindows()
-    return hand_sign_id
+    
+    return frame_index, max_hand_sign_index , (max_hand_sign_prob * 100)
+
+if __name__ == "__main__":
+    cap = cv.VideoCapture("capture.avi")
+    # Measure the start time
+    # detect_eye_blink(cap)
+    # detect_smile(cap)
+    frame_index, class_, prob = detect_victory_thumbsUp(cap)
+    print(class_, prob)
