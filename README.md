@@ -1,4 +1,4 @@
-# Video KYC Verification App - README
+# Video KYC Verification 
 
 ## Overview
 The Video KYC Verification App is designed to verify the identity of users through various recognition metrics. This app measures the Eye Blink Score, Smile Detection Score, and Hand Gesture Recognition Score (Victory or Thumbs Up). If the average of these three scores exceeds 90%, the KYC (Know Your Customer) process is considered verified. Additionally, the app allows users to record a video using WebRTC or upload an existing video, verifies the identity based on the scores, and generates a GIF and a DataFrame (df) of scores.
