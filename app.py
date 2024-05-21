@@ -1,13 +1,7 @@
 import streamlit as st
-import matplotlib.pyplot as plt
 import cv2
-from PIL import Image
-import time
-import json
-import av
-import os
 from aiortc.contrib.media import MediaRecorder
-from streamlit_webrtc import VideoTransformerBase, WebRtcMode, webrtc_streamer
+from streamlit_webrtc import VideoTransformerBase, webrtc_streamer
 from src.components.predict import final_score
 
 def capture():
@@ -20,39 +14,31 @@ def capture():
             img = frame.to_ndarray(format="bgr24")
             self.out.write(img)
             return img
+    
     webrtc_streamer(key="video_recording", video_processor_factory=VideoTransformer)
 
 def upload():
     uploaded_files = st.file_uploader("Upload video for KYC", type=['mp4', 'avi', 'mov'], accept_multiple_files=False)
     
     if uploaded_files is not None:
-        
-        # Read the video file
         video_bytes = uploaded_files.read()
-        # Save the video as upload.avi
         with st.spinner("Uploading..."):
             with open("capture.mp4", "wb") as f:
                 f.write(video_bytes)
         st.success("Video uploaded successfully!")
-
-        # Display preview
-        if st.button("preview"):
-            st.video(f.name)       
+        
+        if st.button("Preview"):
+            st.video(f.name)
             if st.button("Close"):
-                # Close the temporary file and remove it
                 f.close()
                 os.remove(f.name)
                 st.success("Preview closed.")
 
 def submit_button(username):
-   # sends the video to prediction pipeline and predict the output
-    
-    df, score = final_score(username) 
+    df, score = final_score(username)
     if score > 70:
-            # displays a success message if the score is greater than 70
         st.success(f"Congratulations! Your KYC is verified, and the liveliness score is {score}")
     else:
-        # displays an error message if the score is less than or equal to 70
         st.error("Sorry, we couldn't verify your identity. Please try again.")
     return df
 
@@ -63,6 +49,7 @@ def main():
         layout="wide",
         initial_sidebar_state="expanded"
     )
+    
     if 'stage' not in st.session_state:
         st.session_state.stage = 0
 
@@ -70,12 +57,30 @@ def main():
         st.session_state.stage = i
 
     if st.session_state.stage == 0:
-        st.button('Signup', on_click=set_state, args=[1])
+        if st.button('Signup'):
+            st.session_state.stage = 1
 
-    if st.session_state.stage >= 1:
-        name = st.text_input('Enter Your Name:', on_change=set_state, args=[2])
+    if st.session_state.stage == 1:
+        name = st.text_input('Enter Your Name:')
+        if name:
+            st.session_state.name = name
+            st.session_state.stage = 2
 
-    if st.session_state.stage >= 2:
+    if st.session_state.stage == 2:
+        st.markdown("<h4 style='text-align: center;'>Please read the instructions carefully:</h4>", unsafe_allow_html=True)
+        st.markdown("""
+            <ul>
+                <li>Stay close to the camera</li>
+                <li>Blink your eyes frequently</li>
+                <li>Smile</li>
+                <li>Show a thumbs-up</li>
+                <li>Show a victory sign</li>
+            </ul>
+        """, unsafe_allow_html=True)
+        if st.button("I have read the instructions"):
+            st.session_state.stage = 3
+
+    if st.session_state.stage >= 3:
         st.markdown(
             "<div style='text-align: center;'><h1>Welcome to the Video KYC App</h1>"
             "<p>Please choose one of the following options:</p></div>",
@@ -92,32 +97,25 @@ def main():
 
         col11, col22, col33, col44, col55 = st.columns(5)
         with col33:
-            st.button('Submit video for Kyc', on_click= set_state, args=[3])
-        # st.button('Submit video for Kyc', on_click= set_state, args=[3])
-            if "capture.avi" is None:
-                set_state(2)
+            if st.button('Submit video for KYC'):
+                st.session_state.stage = 4
 
-    if st.session_state.stage >= 3:
-        st.text("Please wait while the Kyc is being verified, it may take few minutes")
-        with col44:
-            with st.spinner("processing"):
-                df, score = final_score(name)
+    if st.session_state.stage == 4:
+        st.text("Please wait while the KYC is being verified, it may take a few minutes")
+        with st.spinner("Processing..."):
+            df, score = final_score(st.session_state.name)
+        
         if score > 70:
-                # displays a success message if the score is greater than 70
             st.success(f"Congratulations! Your KYC is verified, and the liveliness score is {round(score, 0)}")
             st.balloons()
-            df
+            st.dataframe(df)
             video_file = open('Gif.mp4', 'rb')
             video_bytes = video_file.read()
             st.video(video_bytes)
-            
-            
         else:
-            # displays an error message if the score is less than or equal to 70
             st.error("Sorry, we couldn't verify your identity. Please try again.")
-            
-            
-            st.button('Restart', on_click=set_state, args=[0])
-            
+            if st.button('Restart'):
+                st.session_state.stage = 0
+
 if __name__ == "__main__":
     main()

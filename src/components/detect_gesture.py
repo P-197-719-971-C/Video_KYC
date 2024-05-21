@@ -391,6 +391,7 @@ def detect_victory_thumbsUp(cap):
     # Initialize variables to track maximum probability and index
     max_hand_sign_prob = 0.0
     max_hand_sign_index = 0
+    max_prob_frame_index = 0
     #  ########################################################################
     mode = 0
 
@@ -438,7 +439,7 @@ def detect_victory_thumbsUp(cap):
                 # Hand sign classification
                 hand_sign_id, hand_sign_prob = keypoint_classifier(pre_processed_landmark_list)
                 
-                if hand_sign_prob > max_hand_sign_prob:
+                while hand_sign_prob > max_hand_sign_prob:
                     max_hand_sign_prob = hand_sign_prob
                     max_hand_sign_index = hand_sign_id
                     max_prob_frame_index = frame_index
